@@ -1,0 +1,285 @@
+# ML Model Configuration for F1 Race Outcome Predictor
+
+models:
+  random_forest:
+    name: "Random Forest Classifier"
+    type: "ensemble"
+    parameters:
+      n_estimators: 100
+      max_depth: 10
+      min_samples_split: 2
+      min_samples_leaf: 1
+      random_state: 42
+      n_jobs: -1
+      class_weight: "balanced"
+    
+    hyperparameters:
+      n_estimators: [50, 100, 200]
+      max_depth: [5, 10, 15, 20]
+      min_samples_split: [2, 5, 10]
+      min_samples_leaf: [1, 2, 4]
+    
+    features:
+      - driver_statistics
+      - team_performance
+      - track_characteristics
+      - weather_conditions
+      - historical_performance
+      - season_form
+    
+    target: "race_winner"
+    weight: 0.3
+
+  xgboost:
+    name: "XGBoost Classifier"
+    type: "gradient_boosting"
+    parameters:
+      learning_rate: 0.1
+      max_depth: 6
+      n_estimators: 200
+      subsample: 0.8
+      colsample_bytree: 0.8
+      random_state: 42
+      objective: "multi:softprob"
+      eval_metric: "mlogloss"
+    
+    hyperparameters:
+      learning_rate: [0.01, 0.1, 0.2]
+      max_depth: [3, 6, 9]
+      n_estimators: [100, 200, 300]
+      subsample: [0.6, 0.8, 1.0]
+      colsample_bytree: [0.6, 0.8, 1.0]
+    
+    features:
+      - driver_statistics
+      - team_performance
+      - track_characteristics
+      - weather_conditions
+      - historical_performance
+      - season_form
+      - qualifying_performance
+    
+    target: "race_winner"
+    weight: 0.4
+
+  neural_network:
+    name: "Deep Neural Network"
+    type: "deep_learning"
+    architecture:
+      input_layer:
+        size: 100
+        activation: null
+      
+      hidden_layers:
+        - size: 128
+          activation: "relu"
+          dropout: 0.3
+        - size: 64
+          activation: "relu"
+          dropout: 0.3
+        - size: 32
+          activation: "relu"
+          dropout: 0.2
+      
+      output_layer:
+        size: 20  # Number of drivers
+        activation: "softmax"
+    
+    training:
+      optimizer: "adam"
+      loss: "categorical_crossentropy"
+      metrics: ["accuracy"]
+      epochs: 100
+      batch_size: 32
+      validation_split: 0.2
+      early_stopping:
+        monitor: "val_loss"
+        patience: 10
+        restore_best_weights: true
+    
+    features:
+      - driver_statistics
+      - team_performance
+      - track_characteristics
+      - weather_conditions
+      - historical_performance
+      - season_form
+      - qualifying_performance
+      - practice_performance
+    
+    target: "race_winner"
+    weight: 0.3
+
+# Ensemble Configuration
+ensemble:
+  method: "weighted_average"
+  weights:
+    random_forest: 0.3
+    xgboost: 0.4
+    neural_network: 0.3
+  
+  voting_strategy: "soft"  # soft or hard voting
+  
+  confidence_threshold: 0.75
+  
+  fallback_strategy: "most_confident_model"
+
+# Feature Engineering
+feature_engineering:
+  driver_features:
+    - wins_season
+    - podiums_season
+    - points_season
+    - avg_finish_position
+    - dnf_rate
+    - qualifying_average
+    - form_trend
+    - circuit_performance
+  
+  team_features:
+    - constructor_points
+    - constructor_wins
+    - reliability_rate
+    - development_trend
+    - pit_stop_performance
+    - strategy_effectiveness
+  
+  track_features:
+    - circuit_length
+    - number_of_turns
+    - overtaking_difficulty
+    - tire_degradation_rate
+    - drs_zones
+    - elevation_changes
+  
+  weather_features:
+    - temperature
+    - humidity
+    - wind_speed
+    - precipitation_probability
+    - track_temperature
+    - weather_stability
+  
+  historical_features:
+    - pole_position_advantage
+    - safety_car_probability
+    - average_pit_stops
+    - fastest_lap_importance
+    - grid_position_correlation
+  
+  session_features:
+    - fp1_performance
+    - fp2_performance
+    - fp3_performance
+    - qualifying_position
+    - qualifying_gap
+    - sector_times
+
+# Model Training
+training:
+  data_sources:
+    - ergast_api
+    - fastf1_data
+    - weather_apis
+    - manual_annotations
+  
+  train_test_split: 0.8
+  validation_split: 0.2
+  
+  cross_validation:
+    method: "time_series_split"
+    n_splits: 5
+  
+  feature_selection:
+    method: "recursive_feature_elimination"
+    n_features: 50
+  
+  preprocessing:
+    scaling: "standard_scaler"
+    encoding: "label_encoder"
+    missing_values: "median_imputation"
+
+# Model Evaluation
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - log_loss
+    - roc_auc
+    - top_3_accuracy
+    - winner_prediction_accuracy
+  
+  validation_strategy: "time_series_split"
+  
+  performance_thresholds:
+    minimum_accuracy: 0.60
+    minimum_precision: 0.65
+    minimum_recall: 0.60
+    minimum_f1: 0.62
+
+# Model Deployment
+deployment:
+  model_versioning: true
+  
+  a_b_testing:
+    enabled: true
+    traffic_split: 0.1  # 10% to new model
+  
+  rollback_strategy: "automatic_on_performance_drop"
+  
+  monitoring:
+    performance_tracking: true
+    drift_detection: true
+    alert_thresholds:
+      accuracy_drop: 0.05
+      prediction_latency: 1000  # ms
+
+# Prediction Types
+prediction_types:
+  pre_race:
+    models: ["random_forest", "xgboost", "neural_network"]
+    confidence_threshold: 0.70
+    output_format:
+      - predicted_winner
+      - top_10_order
+      - win_probabilities
+      - team_performance
+  
+  live_race:
+    models: ["xgboost", "neural_network"]
+    update_frequency: 30  # seconds
+    confidence_threshold: 0.65
+    output_format:
+      - current_win_probabilities
+      - position_change_predictions
+      - pit_strategy_recommendations
+  
+  podium_prediction:
+    models: ["random_forest", "xgboost"]
+    confidence_threshold: 0.75
+    output_format:
+      - podium_probabilities
+      - top_3_combinations
+      - confidence_intervals
+
+# Data Pipeline
+data_pipeline:
+  ingestion:
+    batch_size: 1000
+    frequency: "hourly"
+    sources:
+      - ergast_api
+      - weather_apis
+      - live_timing
+  
+  processing:
+    feature_extraction: true
+    data_validation: true
+    outlier_detection: true
+  
+  storage:
+    raw_data_retention: "2_years"
+    processed_data_retention: "5_years"
+    model_artifacts_retention: "1_year"
