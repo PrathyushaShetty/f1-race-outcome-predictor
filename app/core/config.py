@@ -4,7 +4,8 @@ Configuration settings for F1 Race Outcome Predictor
 
 import os
 from typing import List, Optional
-from pydantic import BaseSettings, validator
+from pydantic import validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -16,7 +17,7 @@ class Settings(BaseSettings):
     ERGAST_API_BASE_URL: str = "http://ergast.com/api/f1"
     
     # Database Configuration
-    DATABASE_URL: str = "postgresql://username:password@localhost:5432/f1_predictor"
+    DATABASE_URL: str = "sqlite:///./f1_predictor.db"
     DATABASE_HOST: str = "localhost"
     DATABASE_PORT: int = 5432
     DATABASE_NAME: str = "f1_predictor"

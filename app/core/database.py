@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-import asyncpg
+# import asyncpg
 import asyncio
 
 from app.core.config import settings
@@ -17,7 +17,8 @@ engine = create_engine(
     poolclass=StaticPool,
     echo=settings.DEBUG,
     pool_pre_ping=True,
-    pool_recycle=300
+    pool_recycle=300,
+    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
 )
 
 # Create session factory
@@ -47,6 +48,9 @@ async def init_db():
 async def create_database_if_not_exists():
     """Create database if it doesn't exist"""
     try:
+        if "sqlite" in settings.DATABASE_URL:
+            return
+            
         # Parse database URL to get connection details
         db_url_parts = settings.DATABASE_URL.replace("postgresql://", "").split("/")
         connection_part = db_url_parts[0]
@@ -56,26 +60,30 @@ async def create_database_if_not_exists():
         user, password = user_pass.split(":")
         host, port = host_port.split(":")
         
-        # Connect to PostgreSQL server (not specific database)
-        conn = await asyncpg.connect(
-            host=host,
-            port=int(port),
-            user=user,
-            password=password,
-            database="postgres"  # Connect to default postgres database
-        )
-        
-        # Check if database exists
-        result = await conn.fetchval(
-            "SELECT 1 FROM pg_database WHERE datname = $1", database_name
-        )
-        
-        if not result:
-            # Create database
-            await conn.execute(f'CREATE DATABASE "{database_name}"')
-            print(f"✅ Database '{database_name}' created successfully")
-        
-        await conn.close()
+        try:
+            import asyncpg
+            # Connect to PostgreSQL server (not specific database)
+            conn = await asyncpg.connect(
+                host=host,
+                port=int(port),
+                user=user,
+                password=password,
+                database="postgres"  # Connect to default postgres database
+            )
+            
+            # Check if database exists
+            result = await conn.fetchval(
+                "SELECT 1 FROM pg_database WHERE datname = $1", database_name
+            )
+            
+            if not result:
+                # Create database
+                await conn.execute(f'CREATE DATABASE "{database_name}"')
+                print(f"[OK] Database '{database_name}' created successfully")
+            
+            await conn.close()
+        except ImportError:
+            print("[WARN] asyncpg not installed, skipping PostgreSQL database creation check")
         
     except Exception as e:
         print(f"⚠️ Database creation check failed: {e}")

@@ -172,21 +172,21 @@ class WeatherData(Base):
 async def create_tables():
     """Create all database tables"""
     try:
-        logger.info("🗄️ Creating database tables...")
+        logger.info("[INFO] Creating database tables...")
         
         # Create all tables
         Base.metadata.create_all(bind=engine)
         
-        logger.info("✅ Database tables created successfully")
+        logger.info("[OK] Database tables created successfully")
         
     except Exception as e:
-        logger.error(f"❌ Failed to create tables: {e}")
+        logger.error(f"[ERROR] Failed to create tables: {e}")
         raise
 
 async def populate_sample_data():
     """Populate database with sample data"""
     try:
-        logger.info("📊 Populating sample data...")
+        logger.info("[INFO] Populating sample data...")
         
         from app.core.database import SessionLocal
         
@@ -317,24 +317,32 @@ async def populate_sample_data():
         
         # Add all sample data
         for circuit in circuits:
-            db.merge(circuit)
+            existing = db.query(Circuit).filter(Circuit.circuit_id == circuit.circuit_id).first()
+            if not existing:
+                db.add(circuit)
         
         for driver in drivers:
-            db.merge(driver)
+            existing = db.query(Driver).filter(Driver.driver_id == driver.driver_id).first()
+            if not existing:
+                db.add(driver)
         
         for constructor in constructors:
-            db.merge(constructor)
+            existing = db.query(Constructor).filter(Constructor.constructor_id == constructor.constructor_id).first()
+            if not existing:
+                db.add(constructor)
         
         for race in races:
-            db.merge(race)
+            existing = db.query(Race).filter(Race.race_id == race.race_id).first()
+            if not existing:
+                db.add(race)
         
         db.commit()
         db.close()
         
-        logger.info("✅ Sample data populated successfully")
+        logger.info("[OK] Sample data populated successfully")
         
     except Exception as e:
-        logger.error(f"❌ Failed to populate sample data: {e}")
+        logger.error(f"[ERROR] Failed to populate sample data: {e}")
         if 'db' in locals():
             db.rollback()
             db.close()
@@ -343,21 +351,21 @@ async def populate_sample_data():
 async def create_indexes():
     """Create database indexes for performance"""
     try:
-        logger.info("📈 Creating database indexes...")
+        logger.info("[INFO] Creating database indexes...")
         
         # This would create additional indexes for performance
         # For now, indexes are created with the table definitions
         
-        logger.info("✅ Database indexes created successfully")
+        logger.info("[OK] Database indexes created successfully")
         
     except Exception as e:
-        logger.error(f"❌ Failed to create indexes: {e}")
+        logger.error(f"[ERROR] Failed to create indexes: {e}")
         raise
 
 async def main():
     """Main database initialization function"""
     try:
-        logger.info("🚀 Starting database initialization...")
+        logger.info("[INFO] Starting database initialization...")
         
         # Initialize database connection
         await init_db()
@@ -371,23 +379,23 @@ async def main():
         # Populate sample data
         await populate_sample_data()
         
-        logger.info("✅ Database initialization completed successfully!")
+        logger.info("[OK] Database initialization completed successfully!")
         
         # Print summary
         print("\n" + "="*50)
-        print("🏎️  F1 RACE OUTCOME PREDICTOR DATABASE")
+        print("   F1 RACE OUTCOME PREDICTOR DATABASE")
         print("="*50)
-        print(f"📊 Database URL: {settings.DATABASE_URL}")
-        print(f"🗄️  Tables created: 8")
-        print(f"📈 Indexes created: Multiple")
-        print(f"🎯 Sample data: Populated")
+        print(f"[INFO] Database URL: {settings.DATABASE_URL}")
+        print(f"[INFO] Tables created: 8")
+        print(f"[INFO] Indexes created: Multiple")
+        print(f"[INFO] Sample data: Populated")
         print("="*50)
-        print("✅ Database is ready for use!")
+        print("[OK] Database is ready for use!")
         print("="*50)
         
     except Exception as e:
-        logger.error(f"❌ Database initialization failed: {e}")
-        print(f"\n❌ Database initialization failed: {e}")
+        logger.error(f"[ERROR] Database initialization failed: {e}")
+        print(f"\n[ERROR] Database initialization failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

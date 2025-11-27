@@ -11,8 +11,9 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import xgboost as xgb
-from tensorflow import keras
-from tensorflow.keras import layers
+# from tensorflow import keras
+# from tensorflow.keras import layers
+# TensorFlow disabled due to installation issues - neural network model will use mock predictions
 import asyncio
 
 from app.core.config import settings
@@ -439,30 +440,32 @@ class NeuralNetworkModel:
     
     def _build_model(self):
         """Build neural network architecture"""
-        model = keras.Sequential([
-            layers.Dense(128, activation='relu', input_shape=(100,)),  # Adjust input shape
-            layers.Dropout(0.3),
-            layers.Dense(64, activation='relu'),
-            layers.Dropout(0.3),
-            layers.Dense(32, activation='relu'),
-            layers.Dense(20, activation='softmax')  # 20 drivers
-        ])
-        
-        model.compile(
-            optimizer='adam',
-            loss='categorical_crossentropy',
-            metrics=['accuracy']
-        )
-        
-        return model
+        # TensorFlow/Keras disabled - returning None
+        return None
+        # model = keras.Sequential([
+        #     layers.Dense(128, activation='relu', input_shape=(100,)),
+        #     layers.Dropout(0.3),
+        #     layers.Dense(64, activation='relu'),
+        #     layers.Dropout(0.3),
+        #     layers.Dense(32, activation='relu'),
+        #     layers.Dense(20, activation='softmax')
+        # ])
+        # model.compile(
+        #     optimizer='adam',
+        #     loss='categorical_crossentropy',
+        #     metrics=['accuracy']
+        # )
+        # return model
     
     async def load(self, filepath: str):
         """Load trained model"""
-        if os.path.exists(filepath):
-            self.model = keras.models.load_model(filepath)
-            self.is_trained = True
-        else:
-            raise FileNotFoundError(f"Model file not found: {filepath}")
+        # TensorFlow/Keras disabled
+        logger.warning("[WARN] Neural network model disabled - keras not available")
+        # if os.path.exists(filepath):
+        #     self.model = keras.models.load_model(filepath)
+        #     self.is_trained = True
+        # else:
+        #     raise FileNotFoundError(f"Model file not found: {filepath}")
     
     async def save(self, filepath: str):
         """Save trained model"""

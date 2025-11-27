@@ -1,0 +1,20 @@
+# Cache
+data/cache/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+venv/
+env/
+
+# Database
+*.sqlite
+*.db
+
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
